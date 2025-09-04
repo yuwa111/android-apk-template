@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.device.secure.hook">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <application
         android:label="Device Secure Hook"
         android:icon="@android:drawable/sym_def_app_icon">
 
-        <!-- Xposed 模块声明 -->
+        <!-- Xposed 模块声明（必须在 application 内） -->
         <meta-data android:name="xposedmodule" android:value="true"/>
         <meta-data android:name="xposeddescription" android:value="Force isDeviceSecure() to true"/>
         <meta-data android:name="xposedminversion" android:value="82"/>
 
     </application>
+
 </manifest>
