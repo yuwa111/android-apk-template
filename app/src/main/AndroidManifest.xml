@@ -1,16 +1,52 @@
-<?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.device.secure.hook">
+name: Build Android APK
+on:
+  push:
+  workflow_dispatch:
 
-    <application
-        android:label="Device Secure Hook"
-        android:icon="@mipmap/ic_launcher">
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-        <!-- Xposed 模块声明（必须在 application 内部） -->
-        <meta-data android:name="xposedmodule" android:value="true"/>
-        <meta-data android:name="xposeddescription" android:value="Force isDeviceSecure() to true"/>
-        <meta-data android:name="xposedminversion" android:value="82"/>
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    </application>
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
 
-</manifest>
+      # 安装 ANDROID_SDK 并暴露 ANDROID_HOME
+      - name: Set up Android SDK (cmdline-tools)
+        uses: android-actions/setup-android@v3
+
+      # 用 sdkmanager 强制安装所需包 + 接受 license（更稳）
+      - name: Install required SDK packages
+        shell: bash
+        run: |
+          export ANDROID_SDK_ROOT="$ANDROID_HOME"
+          export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
+          sdkmanager --version
+
+          yes | sdkmanager --sdk_root="$ANDROID_HOME" \
+            "platform-tools" \
+            "platforms;android-34" \
+            "build-tools;34.0.0"
+
+          yes | sdkmanager --licenses
+
+      # 用固定版本 Gradle 构建（避免 wrapper 不一致）
+      - name: Download Gradle 8.7
+        run: |
+          curl -L -o gradle.zip https://services.gradle.org/distributions/gradle-8.7-bin.zip
+          unzip -q gradle.zip
+
+      - name: Build debug APK
+        run: ./gradle-8.7/bin/gradle -v && ./gradle-8.7/bin/gradle assembleDebug
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug.apk
+          path: app/build/outputs/apk/debug/app-debug.apk
