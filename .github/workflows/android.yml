@@ -17,33 +17,37 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      # 安装 ANDROID_SDK 并暴露 ANDROID_HOME
-      - name: Set up Android SDK (cmdline-tools)
+      # 安装并初始化 ANDROID_SDK（含 cmdline-tools）
+      - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
-      # 用 sdkmanager 强制安装所需包 + 接受 license（更稳）
+      # 用 sdkmanager 明确安装需要的包，并“忽略” licenses 的 Broken pipe
       - name: Install required SDK packages
         shell: bash
         run: |
+          set -e
           export ANDROID_SDK_ROOT="$ANDROID_HOME"
           export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
+
           sdkmanager --version
 
-          yes | sdkmanager --sdk_root="$ANDROID_HOME" \
+          # 安装必要组件
+          sdkmanager --install \
             "platform-tools" \
             "platforms;android-34" \
             "build-tools;34.0.0"
 
-          yes | sdkmanager --licenses
+          # 接受 license；可能出现 Broken pipe，不要让它失败
+          ( yes | sdkmanager --licenses ) || true
 
-      # 用固定版本 Gradle 构建（避免 wrapper 不一致）
+      # 用固定版本 Gradle 构建
       - name: Download Gradle 8.7
         run: |
           curl -L -o gradle.zip https://services.gradle.org/distributions/gradle-8.7-bin.zip
           unzip -q gradle.zip
 
       - name: Build debug APK
-        run: ./gradle-8.7/bin/gradle -v && ./gradle-8.7/bin/gradle assembleDebug
+        run: ./gradle-8.7/bin/gradle --no-daemon assembleDebug
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
