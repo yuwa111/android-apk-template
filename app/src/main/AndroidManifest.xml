@@ -4,13 +4,12 @@
 
     <application
         android:label="Device Secure Hook"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@android:drawable/sym_def_app_icon">
 
-        <!-- Xposed 模块声明（必须在 application 内部） -->
+        <!-- Xposed 模块声明 -->
         <meta-data android:name="xposedmodule" android:value="true"/>
         <meta-data android:name="xposeddescription" android:value="Force isDeviceSecure() to true"/>
         <meta-data android:name="xposedminversion" android:value="82"/>
 
     </application>
-
 </manifest>
