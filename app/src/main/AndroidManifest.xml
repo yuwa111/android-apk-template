@@ -2,8 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <application
-        android:label="Device Secure Hook"
-        android:icon="@android:drawable/sym_def_app_icon">
+        android:label="Device Secure Hook">
 
         <meta-data android:name="xposedmodule" android:value="true"/>
         <meta-data android:name="xposeddescription" android:value="Force isDeviceSecure() to true"/>
