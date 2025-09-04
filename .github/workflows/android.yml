@@ -6,10 +6,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Set up Java 17
         uses: actions/setup-java@v4
@@ -17,37 +15,33 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      # 安装并初始化 ANDROID_SDK（含 cmdline-tools）
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
-      # 用 sdkmanager 明确安装需要的包，并“忽略” licenses 的 Broken pipe
       - name: Install required SDK packages
         shell: bash
         run: |
           set -e
           export ANDROID_SDK_ROOT="$ANDROID_HOME"
           export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$PATH"
-
-          sdkmanager --version
-
-          # 安装必要组件
-          sdkmanager --install \
-            "platform-tools" \
-            "platforms;android-34" \
-            "build-tools;34.0.0"
-
-          # 接受 license；可能出现 Broken pipe，不要让它失败
+          sdkmanager --install "platform-tools" "platforms;android-34" "build-tools;34.0.0"
           ( yes | sdkmanager --licenses ) || true
 
-      # 用固定版本 Gradle 构建
       - name: Download Gradle 8.7
         run: |
           curl -L -o gradle.zip https://services.gradle.org/distributions/gradle-8.7-bin.zip
           unzip -q gradle.zip
 
-      - name: Build debug APK
-        run: ./gradle-8.7/bin/gradle --no-daemon assembleDebug
+      - name: Show tree
+        run: |
+          sudo apt-get update && sudo apt-get install -y tree
+          tree -a -L 4
+
+      - name: Build debug APK (module :app)
+        run: ./gradle-8.7/bin/gradle --no-daemon :app:assembleDebug --stacktrace
+
+      - name: List outputs
+        run: ls -R app/build/outputs || true
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
